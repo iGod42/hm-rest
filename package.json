@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/robertspari/hm-rest/issues"
   },
-  "homepage": "https://github.com/robertspari/hm-rest#readme"
+  "homepage": "https://github.com/robertspari/hm-rest#readme",
+  "dependencies": {
+    "serialport": "^6.2.2"
+  }
 }
