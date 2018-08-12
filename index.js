@@ -1,3 +1,4 @@
 const SerialApi = require('./serial')
 
-SerialApi.getInstance()
+const serial = SerialApi.getInstance()
+serial.subscribe(console.log)
