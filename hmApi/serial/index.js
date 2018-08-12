@@ -1,50 +1,46 @@
 const SerialPort = require('serialport')
-const validate = require('./validation')
+const validateChecksum = require('./validateChecksum')
 const {CSV_RECORD_REGEX} = require('./constants')
 
 const SERIAL_BAUD = 38400
-const END_OF_LINE = '\n'
 const SERIAL_INTERFACE = '/dev/serial0'
 
-const sendMessage = (port, message) =>
-	port.write(message, function (err) {
+function Serial () {
+	let port = new SerialPort(SERIAL_INTERFACE, {baudRate: SERIAL_BAUD})
+
+	let handlers = []
+
+	this.subscribe = (fn) => handlers.push(fn)
+
+	this.unsubscribe = (fn) => handlers = handlers.filter(it => it !== fn)
+
+	this.write = (message) => port.write(message, function (err) {
 		if (err)
 			throw err
 	})
 
-function Serial () {
-	this.port = new SerialPort(SERIAL_INTERFACE, {baudRate: SERIAL_BAUD})
+	let combinedData = ''
 
-	this.handlers = []
-
-	this.subscribe = (fn) => this.handlers.push(fn)
-
-	this.unsubscribe = (fn) => this.handlers = this.handlers.filter(it => it !== fn)
-
-	this.requestConfig = () => sendMessage(this.port, '\n/config\n')
-
-	this.combinedData = ''
-
-	this.port.on('readable', () => {
+	port.on('readable', () => {
 
 		// lines might be split so append whatever is coming to the total ignoring newlines
-		this.combinedData += this.port.read().toString('utf8').replace(END_OF_LINE, '')
+		combinedData += port.read().toString('utf8').replace('\n', '')
 
 		// regex matches for a complete CSV record
 		// complete means starting with $ and ending with an asterisk + a two digit hex checksum
-		let match = CSV_RECORD_REGEX.exec(this.combinedData)
+		let match = CSV_RECORD_REGEX.exec(combinedData)
 
 		while (match) {
 			// additional validation to ensure checksum is correct
-			if (validate(match[0]))
-				this.handlers.forEach(handler => handler(match[0]))
+			if (validateChecksum(match[0]))
+				handlers.forEach(handler => handler(match[0]))
 			// todo: error events might be interesting for subscribers?
 
 			// trim the current record
-			this.combinedData = this.combinedData.substring(match[0].length + match.index)
+			combinedData = combinedData.substring(match[0].length + match.index)
 
 			// retry in unlikely case that there are two records between values received
-			match = CSV_RECORD_REGEX.exec(this.combinedData)
+			match = CSV_RECORD_REGEX.exec(combinedData)
 		}
 	})
 }

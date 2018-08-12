@@ -1,8 +1,6 @@
-const SerialApi = require('./serial')
+const hmApi = require('./hmApi')
 
-const serial = SerialApi.getInstance()
-
-serial.subscribe(console.log)
+hmApi.subscribe(console.log)
 
 const printInstuctions = () => console.log(' c for config')
 
@@ -14,7 +12,7 @@ stdin.addListener('data', function (d
 	// with toString() and then trim()
 	const input = d.toString().trim()
 	if (input === 'c')
-		serial.requestConfig()
+		hmApi.requestConfig()
 
 	main()
 })
