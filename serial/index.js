@@ -19,7 +19,7 @@ function Serial () {
 
 	this.unsubscribe = (fn) => this.handlers = this.handlers.filter(it => it !== fn)
 
-	this.requestConfig = sendMessage(this.port, '/config')
+	this.requestConfig = () => sendMessage(this.port, '/config')
 
 	this.port.on('readable', () => {
 		this.combinedData += this.port.read().toString('utf8')
