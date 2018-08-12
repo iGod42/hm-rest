@@ -1,4 +1,6 @@
-const isWellFormed = (theData) => theData.match(/^\$.*\*[0-9A-F]{2}/)
+const {CSV_RECORD_REGEX} = require('./constants')
+
+const isWellFormed = (theData) => theData.match(CSV_RECORD_REGEX)
 
 const calcXorChecksum = (stringData) =>
 	stringData.split('')
@@ -13,5 +15,3 @@ const hasValidChecksum = (theData) =>
 	calcXorChecksum(getTextDataOnly(theData)) === parseHexString(getCheckSum(theData))
 
 module.exports = (theData) => isWellFormed(theData) && hasValidChecksum(theData)
-
-
