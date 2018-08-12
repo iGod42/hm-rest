@@ -2,11 +2,7 @@ const SerialApi = require('./serial')
 
 const serial = SerialApi.getInstance()
 
-let latestEntry = ''
-
 serial.subscribe(console.log)
-
-serial.requestConfig()
 
 const printInstuctions = () => console.log(' c for config')
 

@@ -4,24 +4,16 @@ const {CSV_RECORD_REGEX} = require('./constants')
 
 const SERIAL_BAUD = 38400
 const END_OF_LINE = '\n'
+const SERIAL_INTERFACE = '/dev/serial0'
 
 const sendMessage = (port, message) =>
-	port.write(message, function (err, res) {
-		if (err) {
-			console.log(err)
+	port.write(message, function (err) {
+		if (err)
 			throw err
-		}
-		console.log(res)
-		return res
 	})
 
 function Serial () {
-	this.port = new SerialPort('/dev/serial0', {
-		baudRate: SERIAL_BAUD,
-		dataBits: 8,
-		stopBits: 1,
-		parity: 'none'
-	})
+	this.port = new SerialPort(SERIAL_INTERFACE, {baudRate: SERIAL_BAUD})
 
 	this.handlers = []
 
@@ -34,19 +26,30 @@ function Serial () {
 	this.combinedData = ''
 
 	this.port.on('readable', () => {
+
+		// lines might be split so append whatever is coming to the total ignoring newlines
 		this.combinedData += this.port.read().toString('utf8').replace(END_OF_LINE, '')
 
-		let match = CSV_RECORD_REGEX(this.combinedData)
+		// regex matches for a complete CSV record
+		// complete means starting with $ and ending with an asterisk + a two digit hex checksum
+		let match = CSV_RECORD_REGEX.exec(this.combinedData)
+
 		while (match) {
+			// additional validation to ensure checksum is correct
 			if (validate(match[0]))
 				this.handlers.forEach(handler => handler(match[0]))
+			// todo: error events might be interesting for subscribers?
 
+			// trim the current record
 			this.combinedData = this.combinedData.substring(match[0].length + match.index)
-			match = CSV_RECORD_REGEX(this.combinedData)
+
+			// retry in unlikely case that there are two records between values received
+			match = CSV_RECORD_REGEX.exec(this.combinedData)
 		}
 	})
 }
 
+// Singleton to prevent issues with multiple open streams
 module.exports = (() => {
 	let instance
 
