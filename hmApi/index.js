@@ -1,6 +1,6 @@
 const Serial = require('./serial')
 
-const serial = Serial.getInstance('/dev/serial0')
+const serial = Serial.getInstance()
 
 const requestSerialUrl = (url) => serial.write(`\n${url}\n`)
 
@@ -51,7 +51,7 @@ const setProbeOffset = (probe, offset) => requestSerialUrl(`/set?po=${getCharNTi
 // /set?pcN=A,B,C,R,TRM - Set the probe coefficients and type for probe N.  A, B, and C are the Steinhart-Hart coeffieicents and R is the fixed side of the probe voltage divider.  A, B, C and R are floating point and can be specified in scienfific noation, e.g. 0.00023067434 -> 2.3067434e-4.  TRM is either the type of probe OR an RF map specifier.  If TRM is less than 128, it indicates a probe type.  Probe types are 0=Disabled, 1=Internal, 2=RFM12B.  Probe types of 128 and above are implicitly of type RFM12B and indicate the transmitter ID of the remote node (0-63) + 128. e.g. Transmitter ID 2 would be passed as 130. The value of 255 (transmitter ID 127) means "any" transmitter and can be used if only one transmitter is used.  Any of A,B,C,R,TRM set to blank will not be modified. Probe numbers are 0=pit 1=food1 2=food2 3=ambient
 const setProbeCoefficients = (probe, steinhartHartA, steinhartHartB, steinhartHartC, probeVoltageDividerResistance, TRM) => requestSerialUrl(`/set?pc${probe}=${steinhartHartA},${steinhartHartB},${steinhartHartC},${probeVoltageDividerResistance},${TRM}`)
 // /set?lb=A,B,C[,C...] - Set display parameters.  A = LCD backlight Range is 0 (off) to 255 (full). B = Home screen mode 254=4-line 255=2-line 0, 1, 2, 3 = BigNum. C = Set LED config byte for Nth LED. See ledmanager.h::LedStimulus for values. High bit means invert.
-const setDisplayPrameters = (lcdBacklight, homeScreenMode, ...ledValues) => requestSerialUrl(`/set?lb=${lcdBacklight},${homeScreenMode}${ledValues ? ',' + ledValues.join(',') : ''}`)
+const setDisplayParameters = (lcdBacklight, homeScreenMode, ...ledValues) => requestSerialUrl(`/set?lb=${lcdBacklight},${homeScreenMode}${ledValues ? ',' + ledValues.join(',') : ''}`)
 // in precent
 const setLcdBrightness = (brightness) => requestSerialUrl(`/set?lb=${Math.ceil(255 * brightness / 100)}`)
 const setHomeScreenMode = (hsm) => requestSerialUrl(`/set?lb=,${hsm}`)
@@ -76,8 +76,8 @@ module.exports = {
 	SET_POINT_UNITS,
 	PID_PARAMS,
 	PROBES,
-	on: serial.on,
-	off: serial.off,
+	on: (event, handler) => serial.on(event, handler),
+	removeListener: (event, handler) => serial.removeListener(event, handler),
 	requestConfig,
 	setSetPoint,
 	tunePid,
@@ -85,7 +85,7 @@ module.exports = {
 	setProbeOffset,
 	setProbeOffsets,
 	setProbeCoefficients,
-	setDisplayPrameters,
+	setDisplayParameters,
 	setLcdBrightness,
 	setHomeScreenMode,
 	setLidDetectionDuration,
