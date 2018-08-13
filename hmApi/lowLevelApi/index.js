@@ -1,5 +1,6 @@
 const Serial = require('../serial')
 const EventEmitter = require('events')
+const updateParser = require('./updateParser')
 
 const LLapi = (() => {
 	const serialKey = Symbol()
@@ -9,7 +10,17 @@ const LLapi = (() => {
 
 		constructor () {
 			super()
-			this[serialKey] = Serial.getInstance()
+			const serial = Serial.getInstance()
+			serial.on('dataReceived', (record) => {
+				try {
+					const parsed = updateParser(record)
+					this.emit('updateReceived', parsed)
+				}
+				catch (e) {
+					// Probably no mapping can be ignored
+				}
+			})
+			this[serialKey] = serial
 		}
 
 		requestSerialUrl (url) { this[serialKey].write(`\n${url}\n`)}
