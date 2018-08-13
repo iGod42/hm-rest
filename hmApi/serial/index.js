@@ -1,5 +1,6 @@
 const SerialPort = require('serialport')
 const validateChecksum = require('./validateChecksum')
+const EventEmitter = require('events');
 
 const CSV_RECORD_REGEX = /\$.*\*[0-9A-F]{2}/
 
