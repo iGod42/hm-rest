@@ -2,11 +2,8 @@ const SerialPort = require('serialport')
 const validateChecksum = require('./validateChecksum')
 const {CSV_RECORD_REGEX} = require('./constants')
 
-const SERIAL_BAUD = 38400
-const SERIAL_INTERFACE = '/dev/serial0'
-
-function Serial () {
-	let port = new SerialPort(SERIAL_INTERFACE, {baudRate: SERIAL_BAUD})
+function Serial (serialInterface, baudRate = 38400) {
+	let port = new SerialPort(serialInterface, {baudRate: baudRate})
 
 	let handlers = []
 

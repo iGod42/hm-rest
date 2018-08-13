@@ -1,6 +1,8 @@
 const Serial = require('./serial')
 
-const serial = Serial.getInstance()
+
+const serial = Serial.getInstance('/dev/serial0')
+
 const requestSerialUrl = (url) => serial.write(`\n${url}\n`)
 
 const SET_POINT_UNITS = {
@@ -27,7 +29,10 @@ const PROBES = {
 const HOME_SCREEN_MODE = {
 	FourLine: 254,
 	TwoLine: 255,
-	BigNum: 1
+	BigNumPitProbe: 0,
+	BigNumFood1Probe: 1,
+	BigNumFood2Probe: 2,
+	BigNumAmbientProbe: 3
 }
 
 const getCharNTimes = (char, n) => (new Array(n + 1)).join(char)
@@ -65,11 +70,32 @@ const displayToastMessage = (line1, line2) => requestSerialUrl(`/set?tt=${line1}
 const setTempParam = (logPidInternal) => requestSerialUrl(`/set?tp=${logPidInternal}`)
 // /reboot - Reboots the microcontroller.  Only if wired to do so (LinkMeter)
 const reboot = () => requestSerialUrl(`/reboot`)
+// /set?pnXXX - Retrieve the current probe names
+const getProbeNames = () => requestConfig('/set?pnXXX')
 
 module.exports = {
 	SET_POINT_UNITS,
 	PID_PARAMS,
 	PROBES,
 	subscribe: serial.subscribe,
-	unsubscribe: serial.unsubscribe
+	unsubscribe: serial.unsubscribe,
+	requestConfig,
+	setSetPoint,
+	tunePid,
+	setProbeName,
+	setProbeOffset,
+	setProbeOffsets,
+	setProbeCoefficients,
+	setDisplayPrameters,
+	setLcdBrightness,
+	setHomeScreenMode,
+	setLidDetectionDuration,
+	setLidDetectionPercentage,
+	setLidModeEnabled,
+	setAlarmThresholds,
+	setFanPrams,
+	displayToastMessage,
+	setTempParam,
+	reboot,
+	getProbeNames
 }
