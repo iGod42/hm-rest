@@ -1,6 +1,5 @@
 const Serial = require('./serial')
 
-
 const serial = Serial.getInstance('/dev/serial0')
 
 const requestSerialUrl = (url) => serial.write(`\n${url}\n`)
@@ -77,8 +76,8 @@ module.exports = {
 	SET_POINT_UNITS,
 	PID_PARAMS,
 	PROBES,
-	subscribe: serial.subscribe,
-	unsubscribe: serial.unsubscribe,
+	on: serial.on,
+	off: serial.off,
 	requestConfig,
 	setSetPoint,
 	tunePid,
