@@ -5,6 +5,8 @@ const llapi = require('./lowLevelApi')
 
 const db = new Datastore({filename: process.env.DB_PATH || './db.json', autoload: true})
 
+const WAIT_FOR_N_TICKS_BETWEEN_UPDATES = (process.env.TEMP_STORE_DISTANCE || 10)
+
 const saveRecord = (record) => {
 	const _record = {...record}
 	delete _record.code
@@ -12,7 +14,7 @@ const saveRecord = (record) => {
 	db.insert(_record, (err) => console.error)
 }
 
-let ticksSinceLastSu = 0
+let ticksSinceLastSu = 1
 
 const handleUpdate = (record, config, emit) => {
 	if (!record || !config)
@@ -20,9 +22,11 @@ const handleUpdate = (record, config, emit) => {
 
 	switch (record.code) {
 		case 'HMSU':
-			ticksSinceLastSu++
-			if (ticksSinceLastSu >= process.env.TEMP_STORE_DISTANCE || 10)
+			ticksSinceLastSu--
+			if (ticksSinceLastSu <= 0) {
 				saveRecord(record)
+				ticksSinceLastSu = WAIT_FOR_N_TICKS_BETWEEN_UPDATES
+			}
 			break
 	}
 }
