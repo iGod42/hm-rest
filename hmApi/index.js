@@ -18,13 +18,13 @@ const cleanRecord = record =>
 		{})
 
 const persistRecord = (record) => {
-	db.insert(cleanRecord(record), console.error)
+	db.insert(cleanRecord(record), (err) => err ? console.error(err) : null)
 }
 
 let ticksSinceLastSu = 1
 
 const handleUpdate = (record, cookData) => {
-	if (!record || !config)
+	if (!record || !cookData)
 		return
 
 	switch (record.code) {
