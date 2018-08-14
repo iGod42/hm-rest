@@ -60,9 +60,9 @@ const HmApi = (() => {
 		}
 
 		getTempsSince (timestamp) {
-			return timestamp ?
+			return !timestamp ?
 				this.cookData.temperatureData :
-				this.cookData.temperatureData.filter(record => record.timestamp < timestamp)
+				this.cookData.temperatureData.filter(record => record.timeStamp > timestamp)
 		}
 	}
 })()
