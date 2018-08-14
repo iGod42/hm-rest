@@ -7,24 +7,32 @@ const db = new Datastore({filename: process.env.DB_PATH || './db.json', autoload
 
 const WAIT_FOR_N_TICKS_BETWEEN_UPDATES = (process.env.TEMP_STORE_DISTANCE || 10)
 
-const saveRecord = (record) => {
-	const _record = {...record}
-	delete _record.code
-	delete _record.name
-	db.insert(_record, (err) => console.error)
+const cleanRecord = record =>
+	Object.keys(record).reduce((obj, curr) =>
+			curr === 'code' || curr === 'name' ?
+				obj :
+				{
+					...obj,
+					[curr]: record[curr]
+				},
+		{})
+
+const persistRecord = (record) => {
+	db.insert(cleanRecord(record), console.error)
 }
 
 let ticksSinceLastSu = 1
 
-const handleUpdate = (record, config, emit) => {
+const handleUpdate = (record, cookData) => {
 	if (!record || !config)
 		return
 
 	switch (record.code) {
 		case 'HMSU':
+			cookData.temperatureData.push(cleanRecord(record))
 			ticksSinceLastSu--
 			if (ticksSinceLastSu <= 0) {
-				saveRecord(record)
+				persistRecord(record)
 				ticksSinceLastSu = WAIT_FOR_N_TICKS_BETWEEN_UPDATES
 			}
 			break
@@ -37,15 +45,24 @@ const HmApi = (() => {
 		constructor () {
 			super()
 
-			this.config = {}
+			this.cookData = {
+				temperatureData: [],
+				config: {}
+			}
 
 			const apiInstance = new llapi.LLapi()
 
-			apiInstance.on('updateReceived', (record) => handleUpdate(record, this.config, this.emit))
+			apiInstance.on('updateReceived', (record) => handleUpdate(record, this.cookData, this.emit))
 
 			apiInstance.requestConfig()
 
 			this[llApiKey] = apiInstance
+		}
+
+		getTempsSince (timestamp) {
+			return timestamp ?
+				this.cookData.temperatureData :
+				this.cookData.temperatureData.filter(record => record.timestamp < timestamp)
 		}
 	}
 })()
