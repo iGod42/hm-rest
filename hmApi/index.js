@@ -3,7 +3,7 @@ const Datastore = require('nedb')
 
 const llapi = require('./lowLevelApi')
 
-const db = new Datastore({filename: process.env.DB_PATH || './db', autoload: true})
+const db = new Datastore({filename: process.env.DB_PATH || './db.json', autoload: true})
 
 const saveRecord = (record) => {
 	const _record = {...record}
@@ -12,14 +12,18 @@ const saveRecord = (record) => {
 	db.insert(_record, (err) => console.error)
 }
 
+let ticksSinceLastSu = 0
+
 const handleUpdate = (record, config, emit) => {
 	if (!record || !config)
 		return
 
 	switch (record.code) {
 		case 'HMSU':
-			saveRecord(record)
-			break;
+			ticksSinceLastSu++
+			if (ticksSinceLastSu >= process.env.TEMP_STORE_DISTANCE || 10)
+				saveRecord(record)
+			break
 	}
 }
 
